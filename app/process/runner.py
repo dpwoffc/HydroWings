@@ -36,6 +36,7 @@ def start_server(name, cwd, cmd):
         cmd,
         cwd=cwd,
         shell=True,
+	stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -96,3 +97,24 @@ def status():
 
 def get_logs(name):
     return logs.get(name, [])
+
+
+def send_command(name: str, command: str):
+    proc = processes.get(name)
+
+    if proc is None:
+        return {"error": "not running"}
+
+    try:
+        proc.stdin.write(command + "\n")
+        proc.stdin.flush()
+
+        return {
+            "status": "sent",
+            "command": command
+        }
+
+    except Exception as e:
+        return {
+            "error": str(e)
+        }
