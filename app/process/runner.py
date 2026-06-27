@@ -21,6 +21,13 @@ def _reader(name, proc):
 
         print(f"[{name}] {line}")
 
+try:
+    import asyncio
+    from app.ws.events import broadcast
+    asyncio.run(broadcast(name, line))
+except:
+    pass
+
 def start_server(name, cwd, cmd):
     if name in processes and processes[name].poll() is None:
         return {"status": "already_running"}
