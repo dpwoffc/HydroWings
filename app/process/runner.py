@@ -1,7 +1,25 @@
 import subprocess
+import threading
 import psutil
 
 processes = {}
+logs = {}
+
+def _reader(name, proc):
+    logs[name] = []
+
+    for line in iter(proc.stdout.readline, ''):
+        line = line.rstrip()
+
+        if not line:
+            continue
+
+        logs[name].append(line)
+
+        if len(logs[name]) > 500:
+            logs[name] = logs[name][-500:]
+
+        print(f"[{name}] {line}")
 
 def start_server(name, cwd, cmd):
     if name in processes and processes[name].poll() is None:
@@ -13,10 +31,17 @@ def start_server(name, cwd, cmd):
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        text=True
+        text=True,
+        bufsize=1
     )
 
     processes[name] = proc
+
+    threading.Thread(
+        target=_reader,
+        args=(name, proc),
+        daemon=True
+    ).start()
 
     return {
         "status": "started",
@@ -35,9 +60,10 @@ def stop_server(name):
     return {"status": "stopped"}
 
 def status():
-    data = []
+    out = []
 
     for name, proc in processes.items():
+
         running = proc.poll() is None
 
         cpu = 0
@@ -51,7 +77,7 @@ def status():
             except:
                 pass
 
-        data.append({
+        out.append({
             "name": name,
             "pid": proc.pid,
             "running": running,
@@ -59,4 +85,7 @@ def status():
             "ram": ram
         })
 
-    return data
+    return out
+
+def get_logs(name):
+    return logs.get(name, [])

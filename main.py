@@ -4,10 +4,11 @@ from pydantic import BaseModel
 from app.process.runner import (
     start_server,
     stop_server,
-    status
+    status,
+    get_logs
 )
 
-app = FastAPI(title="DroidWings")
+app = FastAPI(title="DroidDaemon")
 
 
 class StartRequest(BaseModel):
@@ -19,7 +20,7 @@ class StartRequest(BaseModel):
 @app.get("/")
 def root():
     return {
-        "name": "DroidWings",
+        "daemon": "DroidDaemon",
         "status": "online"
     }
 
@@ -27,6 +28,11 @@ def root():
 @app.get("/servers")
 def servers():
     return status()
+
+
+@app.get("/servers/logs/{name}")
+def logs(name: str):
+    return get_logs(name)
 
 
 @app.post("/servers/start")
