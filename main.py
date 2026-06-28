@@ -9,6 +9,11 @@ from app.process.runner import send_command
 from app.process.restart import restart_server
 from app.process.kill import kill_server
 
+from app.api.system import router as system_router
+from app.api.servers import router as servers_router
+from app.api.files import router as files_router
+from app.api.console import router as console_router
+
 from app.auth.token import verify_token
 from app.core.runtime import build_command
 from app.files.manager import (
@@ -54,6 +59,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.include_router(system_router)
+app.include_router(servers_router)
+app.include_router(files_router)
+app.include_router(console_router)
 
 class ConsoleCommand(BaseModel):
     command: str
