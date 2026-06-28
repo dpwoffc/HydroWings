@@ -1,14 +1,19 @@
+import asyncio
 import subprocess
 import threading
+
 import psutil
+
+from app.ws.send import emit
 
 processes = {}
 logs = {}
 
+
 def _reader(name, proc):
     logs[name] = []
 
-    for line in iter(proc.stdout.readline, ''):
+    for line in iter(proc.stdout.readline, ""):
         line = line.rstrip()
 
         if not line:
@@ -21,12 +26,17 @@ def _reader(name, proc):
 
         print(f"[{name}] {line}")
 
-try:
-    import asyncio
-    from app.ws.events import broadcast
-    asyncio.run(broadcast(name, line))
-except:
-    pass
+        try:
+            asyncio.run(
+                emit(
+                    name,
+                    "console output",
+                    [line]
+                )
+            )
+        except Exception:
+            pass
+
 
 def start_server(name, cwd, cmd):
     if name in processes and processes[name].poll() is None:
@@ -36,11 +46,11 @@ def start_server(name, cwd, cmd):
         cmd,
         cwd=cwd,
         shell=True,
-	stdin=subprocess.PIPE,
+        stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        bufsize=1
+        bufsize=1,
     )
 
     processes[name] = proc
@@ -48,13 +58,25 @@ def start_server(name, cwd, cmd):
     threading.Thread(
         target=_reader,
         args=(name, proc),
-        daemon=True
+        daemon=True,
     ).start()
+
+    try:
+        asyncio.run(
+            emit(
+                name,
+                "status",
+                ["running"],
+            )
+        )
+    except Exception:
+        pass
 
     return {
         "status": "started",
-        "pid": proc.pid
+        "pid": proc.pid,
     }
+
 
 def stop_server(name):
     if name not in processes:
@@ -65,13 +87,24 @@ def stop_server(name):
     if proc.poll() is None:
         proc.terminate()
 
+    try:
+        asyncio.run(
+            emit(
+                name,
+                "status",
+                ["offline"],
+            )
+        )
+    except Exception:
+        pass
+
     return {"status": "stopped"}
+
 
 def status():
     out = []
 
     for name, proc in processes.items():
-
         running = proc.poll() is None
 
         cpu = 0
@@ -82,18 +115,21 @@ def status():
                 p = psutil.Process(proc.pid)
                 cpu = p.cpu_percent()
                 ram = p.memory_info().rss // 1024 // 1024
-            except:
+            except Exception:
                 pass
 
-        out.append({
-            "name": name,
-            "pid": proc.pid,
-            "running": running,
-            "cpu": cpu,
-            "ram": ram
-        })
+        out.append(
+            {
+                "name": name,
+                "pid": proc.pid,
+                "running": running,
+                "cpu": cpu,
+                "ram": ram,
+            }
+        )
 
     return out
+
 
 def get_logs(name):
     return logs.get(name, [])
@@ -109,12 +145,23 @@ def send_command(name: str, command: str):
         proc.stdin.write(command + "\n")
         proc.stdin.flush()
 
+        try:
+            asyncio.run(
+                emit(
+                    name,
+                    "console command",
+                    [command],
+                )
+            )
+        except Exception:
+            pass
+
         return {
             "status": "sent",
-            "command": command
+            "command": command,
         }
 
     except Exception as e:
         return {
-            "error": str(e)
+            "error": str(e),
         }

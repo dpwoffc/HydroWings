@@ -1,0 +1,8 @@
+id: 1
+location: Android
+name: Hydro Android
+panel: http://192.168.1.2
+registered: true
+secret: ''
+token: xyz
+token_id: abc

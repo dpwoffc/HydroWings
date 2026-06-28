@@ -23,17 +23,18 @@ def list_servers():
         if not os.path.isdir(path):
             continue
 
+        cfg = {
+            "name": folder,
+            "uuid": folder,   # fallback
+            "runtime": "unknown",
+            "entry": "",
+        }
+
         daemon = os.path.join(path, "daemon.yml")
 
-        # hanya folder yang memiliki daemon.yml dianggap server
-        if not os.path.isfile(daemon):
-            continue
-
-        with open(daemon) as f:
-            cfg = yaml.safe_load(f) or {}
-
-        cfg.setdefault("name", folder)
-        cfg.setdefault("uuid", folder)
+        if os.path.exists(daemon):
+            with open(daemon) as f:
+                cfg.update(yaml.safe_load(f) or {})
 
         servers.append(cfg)
 
@@ -44,6 +45,7 @@ def get_server(value):
     target = slug(value)
 
     for server in list_servers():
+
         if slug(server["name"]) == target:
             return server
 

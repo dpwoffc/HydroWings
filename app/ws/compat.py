@@ -1,16 +1,17 @@
 from fastapi import APIRouter
+
 from app.ws.token import create
 
 router = APIRouter()
 
+@router.get("/api/servers/{uuid}/websocket")
+def websocket(uuid: str):
 
-@router.get("/servers/{name}/websocket")
-def websocket(name: str):
-    token = create(name)
+    token = create(uuid)
 
     return {
         "data": {
             "token": token,
-            "socket": f"/ws/servers/{name}"
+            "socket": f"/ws/servers/{uuid}"
         }
     }

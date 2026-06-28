@@ -13,6 +13,18 @@ from app.api.system import router as system_router
 from app.api.servers import router as servers_router
 from app.api.files import router as files_router
 from app.api.console import router as console_router
+from app.compatibility.router import router as compatibility_router
+from app.node.register import router as node_router
+from app.node.info import heartbeat, info
+from app.node.auth import get_secret
+from app.panel.client import pair
+from app.middleware.logger import RequestLogger
+from app.ws.compat import router as ws_api_router
+from app.ws.router import router as ws_router
+from app.ws.stats import stats_loop
+from fastapi import WebSocketDisconnect
+from app.ws.token import verify
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth.token import verify_token
 from app.core.runtime import build_command
@@ -59,10 +71,25 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://192.168.1.6:8080",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(system_router)
 app.include_router(servers_router)
 app.include_router(files_router)
 app.include_router(console_router)
+app.include_router(compatibility_router)
+app.include_router(node_router)
+app.add_middleware(RequestLogger)
+app.include_router(ws_api_router)
+app.include_router(ws_router)
 
 class ConsoleCommand(BaseModel):
     command: str
@@ -115,17 +142,6 @@ def start(req: StartRequest, _: str = Depends(verify_token)):
 @app.post("/servers/stop/{name}")
 def stop(name: str, _: str = Depends(verify_token)):
     return stop_server(name)
-
-
-@app.websocket("/console/{name}")
-async def console(ws: WebSocket, name: str):
-    await connect(name, ws)
-
-    try:
-        while True:
-            await ws.receive_text()
-    except Exception:
-        await disconnect(name, ws)
 
 
 @app.post("/servers/{name}/start")
@@ -257,3 +273,31 @@ def server_info(
         return {"error": "server not found"}
 
     return server
+
+
+@app.get("/ping")
+def ping():
+    return {
+        "pong": True
+    }
+
+
+@app.get("/node/heartbeat")
+def node_heartbeat():
+    return heartbeat()
+
+
+@app.get("/node/info")
+def node_info():
+    return info()
+
+
+@app.get("/node/token")
+def node_token():
+    return {
+        "secret": get_secret()
+    }
+@app.post("/node/pair")
+def node_pair():
+    return pair()
+
