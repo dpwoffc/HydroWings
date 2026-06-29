@@ -1,0 +1,24 @@
+{
+    "debug": false,
+    "uuid": "fc97c378-9a2b-4d4f-aa3b-7cd4c97a6f26",
+    "token_id": "nym7n0H5ppJZ2PSe",
+    "token": "NmkYqQIxPCfqnMWx2LEWdKGJvdQojgqezIukepBxnsLByzbdArXwaM5pC3ziVurj",
+    "api": {
+        "host": "0.0.0.0",
+        "port": 8081,
+        "ssl": {
+            "enabled": false,
+            "cert": "/etc/letsencrypt/live/192.168.1.6/fullchain.pem",
+            "key": "/etc/letsencrypt/live/192.168.1.6/privkey.pem"
+        },
+        "upload_limit": 100
+    },
+    "system": {
+        "data": "/var/lib/pterodactyl/volumes",
+        "sftp": {
+            "bind_port": 2022
+        }
+    },
+    "allowed_mounts": [],
+    "remote": "http://192.168.1.6:8080"
+}

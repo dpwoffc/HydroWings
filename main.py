@@ -25,6 +25,8 @@ from app.ws.stats import stats_loop
 from fastapi import WebSocketDisconnect
 from app.ws.token import verify
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.server import router as server_router
+from app.api import router as api_router
 
 from app.auth.token import verify_token
 from app.core.runtime import build_command
@@ -90,6 +92,8 @@ app.include_router(node_router)
 app.add_middleware(RequestLogger)
 app.include_router(ws_api_router)
 app.include_router(ws_router)
+app.include_router(server_router)
+app.include_router(api_router)
 
 class ConsoleCommand(BaseModel):
     command: str

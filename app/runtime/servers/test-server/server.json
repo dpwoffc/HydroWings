@@ -1,0 +1,4 @@
+{
+    "uuid": "test-server",
+    "startup": "while true; do echo HydroWings Running; sleep 1; done"
+}
