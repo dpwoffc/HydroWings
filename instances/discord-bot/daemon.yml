@@ -1,0 +1,6 @@
+name: Discord Bot
+runtime: python
+entry: main.py
+restart: always
+description: Discord Bot Example
+uuid: 9b5bc613-6af1-4a5b-9c0b-fcb84b9c41b3

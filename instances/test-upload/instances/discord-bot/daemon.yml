@@ -1,0 +1,5 @@
+name: Discord Bot
+runtime: python
+entry: main.py
+restart: always
+description: Discord Bot Example
